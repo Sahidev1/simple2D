@@ -12,6 +12,7 @@
 
 #include <stdio.h> //for debugging
 
+
 typedef enum {
     QUIT = SDL_QUIT,
     KEY_PRESSED = SDL_KEYDOWN,
@@ -33,11 +34,11 @@ typedef struct {
 
 static SDL_Window* g_WINDOW;
 static SDL_Renderer* g_RENDERER;
-Drawstate g_drawstate;
+static Drawstate g_drawstate;
 static EventHandler evhData;
 static EventHandler* g_evh = &evhData;
 
-void handle_quit_signal(void*){
+static void handle_quit_signal(void*){
     SDL_DestroyRenderer(g_RENDERER);
     SDL_DestroyWindow(g_WINDOW);
     SDL_Quit();
@@ -63,7 +64,7 @@ int setDrawColor (Uint32 rgba){
 }
 
 int setRenderScale(float x_scale, float y_scale){
-    if (SDL_RenderSetScale(g_RENDERER, x_scale, y_scale) != 0) return UNSPECIFIED_ERROR;
+    if (SDL_RenderSetScale(g_RENDERER, x_scale, y_scale) != 0) return ERROR_SET_RENDER_SCALE;
     return 0;
 }
 
@@ -340,24 +341,24 @@ void presentRender (){
     return SDL_RenderPresent(g_RENDERER);
 }
 
-void createCoord(Vector* coord, int x, int y){
+void setCoord(Vector* coord, int x, int y){
     coord->x = x;
     coord->y = y;
 }
 
-void createRectangle(Rectangle* rect, Vector origin, int width, int height){
+void setRectangle(Rectangle* rect, Vector origin, int width, int height){
     rect->origin.x = origin.x;
     rect->origin.y = origin.y;
     rect->w = width;
     rect->h = height;
 }
 
-int addKeyboardEventhandler(void (*fun_ptr)(KeyboardEvent*, void*)){
+void addKeyboardEventhandler(void (*fun_ptr)(KeyboardEvent*, void*)){
     g_evh->keyboard_eventhandler_enabled = TRUE;
     g_evh->keyboard_eventhandler = fun_ptr;
 }
 
-int addMouseEventHandler(void (*fun_ptr) (MouseEvent*, void*)){
+void addMouseEventHandler(void (*fun_ptr) (MouseEvent*, void*)){
     g_evh->mouse_eventhandler_enabled = TRUE;
     g_evh->mouse_eventhandler = fun_ptr;
 }

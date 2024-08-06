@@ -7,11 +7,10 @@
 #include <SDL2/SDL_events.h>
 #include <SDL2/SDL_keyboard.h>
 #include <SDL2/SDL_image.h>
-
+#include <SDL2/SDL_ttf.h>
 
 
 #include <stdio.h> //for debugging
-
 
 typedef enum {
     QUIT = SDL_QUIT,
@@ -266,13 +265,15 @@ int draw_and_fill_rectangleF(const fRectangle* rect){
 }
 
 
-int createTexture(const char *file, Texture* text){
-    SDL_Surface* surf = IMG_Load(file);
-    if (surf == NULL) return ERROR_CREATE_TEXTURE;
 
 
-    SDL_Surface* converted_surf = SDL_ConvertSurfaceFormat(surf, SDL_PIXELFORMAT_RGBA32, 0);
-    if (converted_surf == NULL) {
+static int surfaceToTexture(SDL_Surface *surf, Texture *text){
+    if (surf == NULL)
+        return ERROR_CREATE_TEXTURE;
+
+    SDL_Surface *converted_surf = SDL_ConvertSurfaceFormat(surf, SDL_PIXELFORMAT_RGBA32, 0);
+    if (converted_surf == NULL)
+    {
         SDL_FreeSurface(surf);
         return ERROR_CREATE_TEXTURE;
     }
@@ -286,18 +287,25 @@ int createTexture(const char *file, Texture* text){
 
     SDL_FreeSurface(surf);
 
-    SDL_Texture* texture = SDL_CreateTextureFromSurface(g_RENDERER, converted_surf);
+    SDL_Texture *texture = SDL_CreateTextureFromSurface(g_RENDERER, converted_surf);
 
-    if (texture == NULL) return ERROR_CREATE_TEXTURE;
+    if (texture == NULL)
+        return ERROR_CREATE_TEXTURE;
 
-    internal_texture_data* idata = malloc(sizeof(internal_texture_data));
+    internal_texture_data *idata = malloc(sizeof(internal_texture_data));
     idata->texture = texture;
     idata->surface = converted_surf;
-    text->internal_ = (void*) idata;
+    text->internal_ = (void *)idata;
     return 0;
 }
 
-void destroyTexture(Texture* txt){
+int createTexture(const char *file, Texture* text){
+    SDL_Surface* surf = IMG_Load(file);
+    return surfaceToTexture(surf, text);
+}
+
+void destroyTexture(Texture *txt)
+{
     SDL_DestroyTexture(((internal_texture_data*)txt->internal_)->texture);
     SDL_FreeSurface(((internal_texture_data*)txt->internal_)->surface);
     free((internal_texture_data*)txt->internal_);
@@ -332,9 +340,35 @@ int updateTexture(Texture* txt){
     return 0;
 }
 
+
+
 int drawTextureNative(Texture* txt, Vector origin){
     Rectangle rect = {.origin = origin, .w=txt->width, .h=txt->height};
     return drawTexture(txt, &rect);
+}
+
+int createUTF8Texture (Texture* txt, StringRenderData* d){
+    int retcode;
+    TTF_Init();
+    //TTF_SetDirection(d->string_write_direction + 1); bugged doesnt work
+    TTF_Font* font = TTF_OpenFont(d->font_fpath, d->font_size);
+    if (font == NULL) return ERROR_CREATE_TEXTURE;
+    Color m = d->foreground_color;
+    SDL_Color sdlC= {.r = m.R, .g = m.G, .b = m.B, .a = m.A}; //uughh
+    SDL_Surface* surf = TTF_RenderUTF8_Solid_Wrapped(font, d->string, sdlC, d->wrapLength);
+    if (surf == NULL) return ERROR_CREATE_TEXTURE;
+    retcode = surfaceToTexture(surf, txt);
+    TTF_Quit();
+    return retcode;
+}
+
+void setStringRenderData(StringRenderData* d, char* font_fpath, stringWriteDir direction, int font_size, char* string, Color fg_color, Uint32 wraplength){
+    d->font_fpath = font_fpath;
+    d->string_write_direction = direction;
+    d->font_size = font_size;
+    d->string = string;
+    d->foreground_color = fg_color;
+    d->wrapLength = wraplength;
 }
 
 void presentRender (){

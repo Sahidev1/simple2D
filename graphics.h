@@ -94,6 +94,17 @@ typedef enum {
     KEYCODE_ARROW_UP
 } Keycodes;
 
+typedef enum {
+    LTR,
+    RTL,
+    TTB,
+    BTT
+}stringWriteDir;
+
+
+
+
+
 /*
     Keyboard event structure
     timestamp: time of event
@@ -275,6 +286,15 @@ typedef struct{
     Uint8 A;
 } Color;
 
+typedef struct {
+    char* font_fpath;
+    stringWriteDir string_write_direction;
+    int font_size;
+    char* string;
+    Color foreground_color;
+    Uint32 wrapLength;
+} StringRenderData;
+
 /*
     Initialize the graphics library, this function must be called before any other function
     Returns 0 on success, error code ERROR_INITIALIZE on failure
@@ -424,12 +444,13 @@ void *safeAccessTexturePixel(Texture *txt, unsigned int x_pixel, unsigned int y_
 */
 int createTexture(const char *file, Texture *text);
 
+
 /*
     Destroy a texture instance
 */
 void destroyTexture(Texture *txt);
 
-/* 
+/*
     Draw a texture to the screen at the specified rectangle
     text: the texture to draw
     rect: the rectangle to draw the texture on
@@ -443,6 +464,10 @@ int drawTexture(Texture *text, Rectangle *rect);
     origin: Vector to the top left corner of the texture rectangle
 */
 int drawTextureNative(Texture *txt, Vector origin);
+
+int createUTF8Texture(Texture *txt, StringRenderData *d);
+
+void setStringRenderData(StringRenderData *d, char *font_fpath, stringWriteDir direction, int font_size, char *string, Color fg_color, Uint32 wraplength);
 
 /*
     Update the texture with new pixel data Call this function after modifying the pixel data of a texture or the texture will not be updated

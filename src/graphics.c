@@ -212,14 +212,14 @@ int drawLineF(fVector c0, fVector c1){
     return SDL_RenderDrawLineF(g_RENDERER, c0.x, c0.y, c1.x, c1.y) !=0 ? ERROR_DRAW_LINE: 0;
 }
 
-void convert_rectange_SDL2(const Rectangle* rect, SDL_Rect* rect_sdl){
+static void convert_rectange_SDL2(const Rectangle* rect, SDL_Rect* rect_sdl){
     rect_sdl->x = rect->origin.x;
     rect_sdl->y = rect->origin.y;
     rect_sdl->w = rect->w;
     rect_sdl->h = rect->h;
 } 
 
-void convert_rectange_SDL2F(const fRectangle* rect, SDL_FRect* rect_sdl){
+static void convert_rectange_SDL2F(const fRectangle* rect, SDL_FRect* rect_sdl){
     rect_sdl->x = rect->origin.x;
     rect_sdl->y = rect->origin.y;
     rect_sdl->w = rect->w;

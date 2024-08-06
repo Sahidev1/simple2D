@@ -358,6 +358,7 @@ int createUTF8Texture (Texture* txt, StringRenderData* d){
     SDL_Surface* surf = TTF_RenderUTF8_Solid_Wrapped(font, d->string, sdlC, d->wrapLength);
     if (surf == NULL) return ERROR_CREATE_TEXTURE;
     retcode = surfaceToTexture(surf, txt);
+    SDL_FreeSurface(surf);
     TTF_Quit();
     return retcode;
 }

@@ -1,0 +1,6 @@
+
+# file ignore prefix
+ig_* 
+# ignore all .out files
+*.out
+

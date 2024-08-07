@@ -94,8 +94,10 @@ typedef enum {
     KEYCODE_ARROW_UP
 } Keycodes;
 
+
+// String display direction
 typedef enum {
-    LTR,
+    LTR = 0x1,
     RTL,
     TTB,
     BTT
@@ -286,6 +288,15 @@ typedef struct{
     Uint8 A;
 } Color;
 
+/*
+    String render data structure
+    font_fpath: the file path to the font file
+    string_write_direction: the direction to write the string
+    font_size: the size of the font
+    string: the string to render
+    foreground_color: the color of the string
+    wrapLength: the length to wrap the, essentialy pixelwidth before newline
+*/
 typedef struct {
     char* font_fpath;
     stringWriteDir string_write_direction;
@@ -465,8 +476,27 @@ int drawTexture(Texture *text, Rectangle *rect);
 */
 int drawTextureNative(Texture *txt, Vector origin);
 
+
+/*
+    Create a texture WITH UTF8 text from a string.
+    Note that direction in the stringRenderData struct is ignored due to setting it to any value causes a bug, so for now only LTR render is supported
+    txt: the texture to create
+    d: the string render data
+    Returns 0 on success, error code ERROR_CREATE_TEXTURE on failure
+*/
 int createUTF8Texture(Texture *txt, StringRenderData *d);
 
+
+/*
+    Set the string render data
+    d: the string render data structure to set
+    font_fpath: the file path to the font file
+    direction: the direction to write the string
+    font_size: the size of the font
+    string: the string to render
+    fg_color: the color of the string
+    wraplength: the length to wrap the string, essentialy pixelwidth before newline
+*/
 void setStringRenderData(StringRenderData *d, char *font_fpath, stringWriteDir direction, int font_size, char *string, Color fg_color, Uint32 wraplength);
 
 /*

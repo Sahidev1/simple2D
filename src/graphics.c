@@ -350,7 +350,7 @@ int drawTextureNative(Texture* txt, Vector origin){
 int createUTF8Texture (Texture* txt, StringRenderData* d){
     int retcode;
     TTF_Init();
-    //TTF_SetDirection(d->string_write_direction + 1); bugged doesnt work
+    //TTF_SetDirection(d->string_write_direction); bugged doesnt work
     TTF_Font* font = TTF_OpenFont(d->font_fpath, d->font_size);
     if (font == NULL) return ERROR_CREATE_TEXTURE;
     Color m = d->foreground_color;
@@ -358,7 +358,6 @@ int createUTF8Texture (Texture* txt, StringRenderData* d){
     SDL_Surface* surf = TTF_RenderUTF8_Solid_Wrapped(font, d->string, sdlC, d->wrapLength);
     if (surf == NULL) return ERROR_CREATE_TEXTURE;
     retcode = surfaceToTexture(surf, txt);
-    SDL_FreeSurface(surf);
     TTF_Quit();
     return retcode;
 }

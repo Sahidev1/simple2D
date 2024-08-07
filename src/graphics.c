@@ -12,6 +12,9 @@
 
 #include <stdio.h> //for debugging
 
+#define INTERNAL_PIXEL_FORMAT (SDL_PIXELFORMAT_RGBA32)
+#define INTERNAL_PIXEL_SIZE 4
+
 typedef enum {
     QUIT = SDL_QUIT,
     KEY_PRESSED = SDL_KEYDOWN,
@@ -271,7 +274,7 @@ static int surfaceToTexture(SDL_Surface *surf, Texture *text){
     if (surf == NULL)
         return ERROR_CREATE_TEXTURE;
 
-    SDL_Surface *converted_surf = SDL_ConvertSurfaceFormat(surf, SDL_PIXELFORMAT_RGBA32, 0);
+    SDL_Surface *converted_surf = SDL_ConvertSurfaceFormat(surf, INTERNAL_PIXEL_FORMAT, 0);
     if (converted_surf == NULL)
     {
         SDL_FreeSurface(surf);
@@ -373,6 +376,37 @@ void S2D_setStringRenderData(StringRenderData* d, char* font_fpath, stringWriteD
 
 void S2D_presentRender (){
     return SDL_RenderPresent(g_RENDERER);
+}
+
+
+int S2D_readRendererPixelData(Rectangle* rect, RendererPixels* rpx){
+    void* pixelData;
+    int pitch;
+    SDL_Rect rectSdl;
+    int retcode;
+    if(rect == NULL){
+        rectSdl.x = 0, rectSdl.y = 0;
+        rectSdl.w = g_drawstate.draw_w;
+        rectSdl.h = g_drawstate.draw_h;
+    } else {
+        convert_rectange_SDL2(rect, &rectSdl);
+    }
+    pixelData = malloc(rectSdl.h * rectSdl.w * INTERNAL_PIXEL_SIZE);
+    pitch = rectSdl.w * INTERNAL_PIXEL_SIZE;
+    retcode = SDL_RenderReadPixels(g_RENDERER, &rectSdl, INTERNAL_PIXEL_FORMAT, pixelData, pitch);
+    rpx->h = rectSdl.h, rpx->w = rectSdl.w;
+    rpx->origin.x = rectSdl.x, rpx->origin.y = rectSdl.y;
+    rpx->pitch = pitch;
+    rpx->bytes_per_pixel = INTERNAL_PIXEL_SIZE;
+    rpx->pixelData = pixelData; 
+    return retcode;
+}
+
+void S2D_freeRendererPixelData(RendererPixels* rpx){
+    if (rpx->pixelData != NULL){
+        free(rpx->pixelData);
+        rpx->pixelData = NULL;
+    }
 }
 
 void S2D_setCoord(Vector* coord, int x, int y){

@@ -307,6 +307,23 @@ typedef struct {
 } StringRenderData;
 
 /*
+    Renderer pixel data structure
+    origin: the origin of point of the pixel data area
+    w: the width of the pixel data area to read
+    h: the height of the pixel data area to read
+    pitch: the pitch of the pixel data area
+    bytes_per_pixel: the number of bytes per pixel
+    pixelData: the pixel data pointer
+*/
+typedef struct {
+    Vector origin;
+    int w, h; 
+    int pitch;
+    int bytes_per_pixel;
+    void* pixelData;
+} RendererPixels;
+
+/*
     Initialize the graphics library, this function must be called before any other function
     Returns 0 on success, error code ERROR_INITIALIZE on failure
 */
@@ -513,8 +530,20 @@ int S2D_updateTexture(Texture *txt);
 void S2D_presentRender();
 
 /*
-    Sets the vector to the specified coordinates
+    Read the pixel data from the renderer
+    Note that there needs to be a small delay between S2D_presentRender calls and this function
+    to get correct render data
+    rect: the rectangle to read the pixel data from
+    rpx: the renderer pixel data structure to store the pixel data on
+    Returns 0 on success, error code ERROR_READ_PIXELS on failure
 */
+int S2D_readRendererPixelData(Rectangle *rect, RendererPixels *rpx);
+
+/*
+    free the pixelData pointer in the RenderedPixels struct
+*/
+void S2D_freeRendererPixelData(RendererPixels *rpx);
+
 void S2D_setCoord(Vector *coord, int x, int y);
 
 /*

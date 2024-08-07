@@ -310,23 +310,23 @@ typedef struct {
     Initialize the graphics library, this function must be called before any other function
     Returns 0 on success, error code ERROR_INITIALIZE on failure
 */
-int initialize();
+int S2D_initialize();
 
 /*
     Create a window with the specified title, width and height
     Returns 0 on success, error code ERROR_CREATE_WINDOW on failure
 */
-int create_window(const char *title, int w, int h);
+int S2D_create_window(const char *title, int w, int h);
 
 /* cause a millisecond delay */
-void delay(int ms);
+void S2D_delay(int ms);
 
 /*
     Set the draw color to the specified color
     Any subsequent drawing function calls will use this color
     Returns 0 on success, error code ERROR_SET_DRAW_COLOR on failure
 */
-int setDrawColor(Uint32 rgba);
+int S2D_setDrawColor(Uint32 rgba);
 
 
 /*
@@ -335,7 +335,7 @@ int setDrawColor(Uint32 rgba);
     y_scale: the y scale
     Returns 0 on success, error code ERROR_SET_RENDER_SCALE on failure
 */
-int setRenderScale(float x_scale, float y_scale);
+int S2D_setRenderScale(float x_scale, float y_scale);
 
 /*
     Get the current draw state
@@ -347,20 +347,20 @@ Drawstate getDrawState();
     Clear the screen with the current draw color
     Returns 0 on success, error code ERROR_CLEAR_SCREEN on failure
 */
-int clearScreen();
+int S2D_clearScreen();
 
 /*
     Draw a point at the specified coordinates
     c: the coordinates of the point
     Returns 0 on success, error code ERROR_DRAW_POINT on failure
 */
-int drawPoint(Vector c);
+int S2D_drawPoint(Vector c);
 
 /* 
     Draw point using float coordinates
     Returns 0 on success, error code ERROR_DRAW_POINT on failure
 */
-int drawPointF(fVector p);
+int S2D_drawPointF(fVector p);
 
 /*
     Draw a set of points
@@ -368,7 +368,7 @@ int drawPointF(fVector p);
     count: the number of points
     Returns 0 on success, error code ERROR_DRAW_POINT on failure
 */
-int drawPoints(const Vector *cords, int count);
+int S2D_drawPoints(const Vector *cords, int count);
 
 /*
     Draw a set of points using float coordinates
@@ -376,21 +376,21 @@ int drawPoints(const Vector *cords, int count);
     count: the number of points
     Returns 0 on success, error code ERROR_DRAW_POINT on failure
 */
-int drawPointsF(const fVector *points, int count);
+int S2D_drawPointsF(const fVector *points, int count);
 
 /*
     Draw a rectangle
     rect: the rectangle to draw
     Returns 0 on success, error code ERROR_DRAW_RECT on failure
 */
-int drawRectangle(const Rectangle *rect);
+int S2D_drawRectangle(const Rectangle *rect);
 
 /*
     Draw a rectangle using float coordinates
     rect: the rectangle to draw
     Returns 0 on success, error code ERROR_DRAW_RECT on failure
 */
-int drawRectangleF(const fRectangle *rect);
+int S2D_drawRectangleF(const fRectangle *rect);
 
 /*
     Draw a line from c0 to c1
@@ -398,7 +398,7 @@ int drawRectangleF(const fRectangle *rect);
     c1: the end point of the line
     Returns 0 on success, error code ERROR_DRAW_LINE on failure
 */
-int drawLine(Vector c0, Vector c1);
+int S2D_drawLine(Vector c0, Vector c1);
 
 /*
     Draw a line from c0 to c1 using float vectors
@@ -406,33 +406,33 @@ int drawLine(Vector c0, Vector c1);
     c1: the end point of the line
     Returns 0 on success, error code ERROR_DRAW_LINE on failure
 */
-int drawLineF(fVector c0, fVector c1);
+int S2D_drawLineF(fVector c0, fVector c1);
 
 /*
     Fill a rectangle with the current draw color
     rect: the rectangle to fill
     Returns 0 on success, error code ERROR_RECT_FILL on failure
 */
-int fillRectangle(const Rectangle *rect);
+int S2D_fillRectangle(const Rectangle *rect);
 
 /*
     Fill a rectangle with the current draw color using float coordinates
     rect: the rectangle to fill
     Returns 0 on success, error code ERROR_RECT_FILL on failure
 */
-int fillRectangleF(const fRectangle *rect);
+int S2D_fillRectangleF(const fRectangle *rect);
 
 /*
     Draw and fill a rectangle with the current draw color
     On success, returns 0, otherwise returns an error code
 */
-int draw_and_fill_rectangle(const Rectangle *rect);
+int S2D_draw_and_fill_rectangle(const Rectangle *rect);
 
 /*
     Draw and fill a rectangle with the current draw color using float coordinates
     On success, returns 0, otherwise returns an error code
 */
-int draw_and_fill_rectangleF(const fRectangle *rect);
+int S2D_draw_and_fill_rectangleF(const fRectangle *rect);
 
 
 
@@ -453,13 +453,13 @@ void *safeAccessTexturePixel(Texture *txt, unsigned int x_pixel, unsigned int y_
     text: the texture to create
     Returns 0 on success, error code ERROR_CREATE_TEXTURE on failure
 */
-int createTexture(const char *file, Texture *text);
+int S2D_createTexture(const char *file, Texture *text);
 
 
 /*
     Destroy a texture instance
 */
-void destroyTexture(Texture *txt);
+void S2D_destroyTexture(Texture *txt);
 
 /*
     Draw a texture to the screen at the specified rectangle
@@ -467,14 +467,14 @@ void destroyTexture(Texture *txt);
     rect: the rectangle to draw the texture on
     Returns 0 on success, error code ERROR_DRAW_TEXTURE on failure
 */
-int drawTexture(Texture *text, Rectangle *rect);
+int S2D_drawTexture(Texture *text, Rectangle *rect);
 
 /*
     Draw a texture on a rectangle which is set to the textures native dimensions
     text: the texture to draw
     origin: Vector to the top left corner of the texture rectangle
 */
-int drawTextureNative(Texture *txt, Vector origin);
+int S2D_drawTextureNative(Texture *txt, Vector origin);
 
 
 /*
@@ -484,7 +484,7 @@ int drawTextureNative(Texture *txt, Vector origin);
     d: the string render data
     Returns 0 on success, error code ERROR_CREATE_TEXTURE on failure
 */
-int createUTF8Texture(Texture *txt, StringRenderData *d);
+int S2D_createUTF8Texture(Texture *txt, StringRenderData *d);
 
 
 /*
@@ -497,50 +497,50 @@ int createUTF8Texture(Texture *txt, StringRenderData *d);
     fg_color: the color of the string
     wraplength: the length to wrap the string, essentialy pixelwidth before newline
 */
-void setStringRenderData(StringRenderData *d, char *font_fpath, stringWriteDir direction, int font_size, char *string, Color fg_color, Uint32 wraplength);
+void S2D_setStringRenderData(StringRenderData *d, char *font_fpath, stringWriteDir direction, int font_size, char *string, Color fg_color, Uint32 wraplength);
 
 /*
     Update the texture with new pixel data Call this function after modifying the pixel data of a texture or the texture will not be updated
     txt: the texture to update
     Returns 0 on success, error code ERROR_DESTROYED_TEXTURE on failure
 */
-int updateTexture(Texture *txt);
+int S2D_updateTexture(Texture *txt);
 
 /*
     Present the render to the screen
     This function must be called to render the drawn objects and textures to the screen
 */
-void presentRender();
+void S2D_presentRender();
 
 /*
     Sets the vector to the specified coordinates
 */
-void setCoord(Vector *coord, int x, int y);
+void S2D_setCoord(Vector *coord, int x, int y);
 
 /*
     Sets the rectangle to the specified coordinates and dimensions
 */
-void setRectangle(Rectangle *rect, Vector origin, int width, int height);
+void S2D_setRectangle(Rectangle *rect, Vector origin, int width, int height);
 
 /*
     Add a keyboard event handler function
     fun_ptr: the function pointer to the keyboard event handler
 */
-void addKeyboardEventhandler(void (*fun_ptr)(KeyboardEvent *, void *));
+void S2D_addKeyboardEventhandler(void (*fun_ptr)(KeyboardEvent *, void *));
 
 
 /*
     Add a mouse event handler function
     fun_ptr: the function pointer to the mouse event handler
 */
-void addMouseEventHandler(void (*fun_ptr)(MouseEvent *, void *));
+void S2D_addMouseEventHandler(void (*fun_ptr)(MouseEvent *, void *));
 
 /*
     Dequeues an event from the event queue that is then passed along to the corresponding event handler, can be looped to dequeue all events
     data: the data to pass along to the event handler
     Returns 1 if an event was dequeued, 0 otherwise
 */
-int eventDequeue(void *data);
+int S2D_eventDequeue(void *data);
 
 
 /*

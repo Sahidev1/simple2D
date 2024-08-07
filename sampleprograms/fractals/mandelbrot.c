@@ -38,9 +38,9 @@ void mandelBrotFn(float *v_r, float *v_z, float c_r, float c_z){
 }
 
 void drawColor(Vector* v, Uint32 colorHex){
-    setDrawColor(colorHex);
-    drawPoint(*v);
-    setDrawColor(DRAW_COLOR_TRANSPARENT);
+    S2D_setDrawColor(colorHex);
+    S2D_drawPoint(*v);
+    S2D_setDrawColor(DRAW_COLOR_TRANSPARENT);
 }
 
 
@@ -76,18 +76,18 @@ void mandelBrotProc(float scaler, float boundary_sqr, int max_n){
 
 
 int main(){
-    initialize();
-    create_window("Fractals", WINDOW_W, WINDOW_H);
+    S2D_initialize();
+    S2D_create_window("Fractals", WINDOW_W, WINDOW_H);
  
     int max_n = MAX_N;
     float boundary = 4.0f;
-    setDrawColor(DRAW_COLOR_TRANSPARENT);
-    clearScreen();
+    S2D_setDrawColor(DRAW_COLOR_TRANSPARENT);
+    S2D_clearScreen();
     mandelBrotProc(512, boundary, max_n);
-    delay(1);
-    presentRender();
+    S2D_delay(1);
+    S2D_presentRender();
     while (TRUE){
-        eventDequeue(NULL);
+        S2D_eventDequeue(NULL);
     }
 
     return 0;

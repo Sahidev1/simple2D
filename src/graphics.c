@@ -45,7 +45,7 @@ static void handle_quit_signal(void*){
 }
 
 // iniatilizes the underlying library and datastructures, must be called first
-int initialize(){
+int S2D_initialize(){
     g_evh->keyboard_eventhandler = FALSE;
     g_evh->mouse_eventhandler = FALSE;
     g_evh->app_quit = handle_quit_signal;
@@ -54,7 +54,7 @@ int initialize(){
 
 
 
-int setDrawColor (Uint32 rgba){
+int S2D_setDrawColor (Uint32 rgba){
     if(SDL_SetRenderDrawColor(g_RENDERER, rgba&0xFF, (rgba>>8)&0xFF, (rgba>>16)&0xFF, rgba>>24) != 0){
         return ERROR_SET_DRAW_COLOR;
     }
@@ -62,7 +62,7 @@ int setDrawColor (Uint32 rgba){
     return 0;
 }
 
-int setRenderScale(float x_scale, float y_scale){
+int S2D_setRenderScale(float x_scale, float y_scale){
     if (SDL_RenderSetScale(g_RENDERER, x_scale, y_scale) != 0) return ERROR_SET_RENDER_SCALE;
     return 0;
 }
@@ -71,7 +71,7 @@ Drawstate getDrawState(){
     return g_drawstate;
 }
 
-int clearScreen(){
+int S2D_clearScreen(){
     if (SDL_RenderClear(g_RENDERER) != 0) return ERROR_CLEAR_SCREEN;
     return 0;
 }
@@ -155,7 +155,7 @@ static int EventQueueFilter (void* userdata, SDL_Event *event, void* data){
 
 
 
-int eventDequeue(void* data){
+int S2D_eventDequeue(void* data){
     SDL_Event event;
     int status = SDL_PollEvent(&event);
     if (status == 0) return 0;
@@ -164,7 +164,7 @@ int eventDequeue(void* data){
     }
 }
 
-int create_window(const char *title, int w, int h){
+int S2D_create_window(const char *title, int w, int h){
     int code = 0;
     Uint32 flags = 0;
     g_WINDOW = SDL_CreateWindow(title, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
@@ -178,7 +178,7 @@ int create_window(const char *title, int w, int h){
     g_RENDERER = SDL_CreateRenderer(g_WINDOW,0, 0);
     if (g_RENDERER == NULL) return ERROR_CREATE_RENDERER;
 
-    if ((code = setDrawColor(DRAW_COLOR_DEFAULT)) != 0) return code;
+    if ((code = S2D_setDrawColor(DRAW_COLOR_DEFAULT)) != 0) return code;
 
     if((code = SDL_RenderClear(g_RENDERER)) != 0) return code;
     SDL_RenderPresent(g_RENDERER);
@@ -187,19 +187,19 @@ int create_window(const char *title, int w, int h){
 
 
 
-int drawPoint(Vector p){
+int S2D_drawPoint(Vector p){
     return SDL_RenderDrawPoint(g_RENDERER, p.x, p.y ) != 0 ? ERROR_DRAW_COORD : 0;
 }
 
-int drawPointF(fVector p){
+int S2D_drawPointF(fVector p){
     return SDL_RenderDrawPointF(g_RENDERER, p.x, p.y ) != 0 ? ERROR_DRAW_COORD : 0;
 }
 
-int drawPoints(const Vector *points, int count){
+int S2D_drawPoints(const Vector *points, int count){
     return SDL_RenderDrawPoints(g_RENDERER, (SDL_Point *) points, count) != 0 ? ERROR_DRAW_COORD : 0;
 }
 
-int drawPointsF(const fVector *points, int count){
+int S2D_drawPointsF(const fVector *points, int count){
     return SDL_RenderDrawPointsF(g_RENDERER, (SDL_FPoint *) points, count) != 0 ? ERROR_DRAW_COORD : 0;
 }
 
@@ -207,7 +207,7 @@ int  drawLine(Vector c0, Vector c1){
     return SDL_RenderDrawLine(g_RENDERER, c0.x, c0.y, c1.x, c1.y) !=0 ? ERROR_DRAW_LINE: 0;
 }
 
-int drawLineF(fVector c0, fVector c1){
+int S2D_drawLineF(fVector c0, fVector c1){
     return SDL_RenderDrawLineF(g_RENDERER, c0.x, c0.y, c1.x, c1.y) !=0 ? ERROR_DRAW_LINE: 0;
 }
 
@@ -225,42 +225,42 @@ static void convert_rectange_SDL2F(const fRectangle* rect, SDL_FRect* rect_sdl){
     rect_sdl->h = rect->h;
 }
 
-int drawRectangle(const Rectangle* rect){
+int S2D_drawRectangle(const Rectangle* rect){
     SDL_Rect rect_sdl;
     convert_rectange_SDL2(rect, &rect_sdl);
     return SDL_RenderDrawRect(g_RENDERER, &rect_sdl) != 0 ? ERROR_DRAW_RECT : 0;
 }
 
-int drawRectangleF(const fRectangle* rect){
+int S2D_drawRectangleF(const fRectangle* rect){
     SDL_FRect rect_sdl;
     convert_rectange_SDL2F(rect, &rect_sdl);
     return SDL_RenderDrawRectF(g_RENDERER, &rect_sdl) != 0 ? ERROR_DRAW_RECT : 0;
 }
 
-int fillRectangle(const Rectangle* rect){
+int S2D_fillRectangle(const Rectangle* rect){
     SDL_Rect rect_sdl;
     convert_rectange_SDL2(rect, &rect_sdl);
     return SDL_RenderFillRect(g_RENDERER, &rect_sdl) != 0 ? ERROR_RECT_FILL : 0;
 }
 
 
-int fillRectangleF(const fRectangle* rect){
+int S2D_fillRectangleF(const fRectangle* rect){
     SDL_FRect rect_sdl;
     convert_rectange_SDL2F(rect, &rect_sdl);
     return SDL_RenderFillRectF(g_RENDERER, &rect_sdl) != 0 ? ERROR_RECT_FILL : 0;
 }
 
-int draw_and_fill_rectangle(const Rectangle* rect){
+int S2D_draw_and_fill_rectangle(const Rectangle* rect){
     int code = 0;
-    if ((code = drawRectangle(rect)) != 0) return code;
-    if ((code = fillRectangle(rect)) != 0) return code;
+    if ((code = S2D_drawRectangle(rect)) != 0) return code;
+    if ((code = S2D_fillRectangle(rect)) != 0) return code;
     return 0;
 }
 
-int draw_and_fill_rectangleF(const fRectangle* rect){
+int S2D_draw_and_fill_rectangleF(const fRectangle* rect){
     int code = 0;
-    if ((code = drawRectangleF(rect)) != 0) return code;
-    if ((code = fillRectangleF(rect)) != 0) return code;
+    if ((code = S2D_drawRectangleF(rect)) != 0) return code;
+    if ((code = S2D_fillRectangleF(rect)) != 0) return code;
     return 0;
 }
 
@@ -299,12 +299,12 @@ static int surfaceToTexture(SDL_Surface *surf, Texture *text){
     return 0;
 }
 
-int createTexture(const char *file, Texture* text){
+int S2D_createTexture(const char *file, Texture* text){
     SDL_Surface* surf = IMG_Load(file);
     return surfaceToTexture(surf, text);
 }
 
-void destroyTexture(Texture *txt)
+void S2D_destroyTexture(Texture *txt)
 {
     SDL_DestroyTexture(((internal_texture_data*)txt->internal_)->texture);
     SDL_FreeSurface(((internal_texture_data*)txt->internal_)->surface);
@@ -323,7 +323,7 @@ void* safeAccessTexturePixel(Texture* txt, unsigned int x_pixel, unsigned int y_
 
 
 
-int drawTexture(Texture* txt, Rectangle* rect){
+int S2D_drawTexture(Texture* txt, Rectangle* rect){
     if (txt->internal_ == NULL) return ERROR_DRAW_TEXTURE;
     SDL_Texture* text = ((internal_texture_data*)txt->internal_)->texture;
     SDL_Rect sdlRect;
@@ -331,7 +331,7 @@ int drawTexture(Texture* txt, Rectangle* rect){
     return SDL_RenderCopy(g_RENDERER, text, NULL, &sdlRect);
 }
 
-int updateTexture(Texture* txt){
+int S2D_updateTexture(Texture* txt){
     internal_texture_data* idata = (internal_texture_data*) txt->internal_;
     SDL_Texture* newText = SDL_CreateTextureFromSurface(g_RENDERER,idata->surface);
     if (newText == NULL) return ERROR_CREATE_TEXTURE;
@@ -342,12 +342,12 @@ int updateTexture(Texture* txt){
 
 
 
-int drawTextureNative(Texture* txt, Vector origin){
+int S2D_drawTextureNative(Texture* txt, Vector origin){
     Rectangle rect = {.origin = origin, .w=txt->width, .h=txt->height};
-    return drawTexture(txt, &rect);
+    return S2D_drawTexture(txt, &rect);
 }
 
-int createUTF8Texture (Texture* txt, StringRenderData* d){
+int S2D_createUTF8Texture (Texture* txt, StringRenderData* d){
     int retcode;
     TTF_Init();
     //TTF_SetDirection(d->string_write_direction); bugged doesnt work
@@ -362,7 +362,7 @@ int createUTF8Texture (Texture* txt, StringRenderData* d){
     return retcode;
 }
 
-void setStringRenderData(StringRenderData* d, char* font_fpath, stringWriteDir direction, int font_size, char* string, Color fg_color, Uint32 wraplength){
+void S2D_setStringRenderData(StringRenderData* d, char* font_fpath, stringWriteDir direction, int font_size, char* string, Color fg_color, Uint32 wraplength){
     d->font_fpath = font_fpath;
     d->string_write_direction = direction;
     d->font_size = font_size;
@@ -371,28 +371,28 @@ void setStringRenderData(StringRenderData* d, char* font_fpath, stringWriteDir d
     d->wrapLength = wraplength;
 }
 
-void presentRender (){
+void S2D_presentRender (){
     return SDL_RenderPresent(g_RENDERER);
 }
 
-void setCoord(Vector* coord, int x, int y){
+void S2D_setCoord(Vector* coord, int x, int y){
     coord->x = x;
     coord->y = y;
 }
 
-void setRectangle(Rectangle* rect, Vector origin, int width, int height){
+void S2D_setRectangle(Rectangle* rect, Vector origin, int width, int height){
     rect->origin.x = origin.x;
     rect->origin.y = origin.y;
     rect->w = width;
     rect->h = height;
 }
 
-void addKeyboardEventhandler(void (*fun_ptr)(KeyboardEvent*, void*)){
+void S2D_addKeyboardEventhandler(void (*fun_ptr)(KeyboardEvent*, void*)){
     g_evh->keyboard_eventhandler_enabled = TRUE;
     g_evh->keyboard_eventhandler = fun_ptr;
 }
 
-void addMouseEventHandler(void (*fun_ptr) (MouseEvent*, void*)){
+void S2D_addMouseEventHandler(void (*fun_ptr) (MouseEvent*, void*)){
     g_evh->mouse_eventhandler_enabled = TRUE;
     g_evh->mouse_eventhandler = fun_ptr;
 }
@@ -411,6 +411,6 @@ Uint32 colorStructToHex (Color color){
 }
 
 
-void delay(int ms){
+void S2D_delay(int ms){
     SDL_Delay(ms);
 }

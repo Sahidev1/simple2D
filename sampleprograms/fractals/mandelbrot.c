@@ -67,7 +67,7 @@ void mandelBrotProc(float scaler, float boundary_sqr, int max_n){
             v.x = i, v.y = j;
             c.R = count * colorMult;
             c.G = (Uint8)2*absSqr;
-            drawColor(&v, colorStructToHex(c));
+            drawColor(&v, S2D_colorStructToHex(c));
         }
         
     }
@@ -77,7 +77,7 @@ void mandelBrotProc(float scaler, float boundary_sqr, int max_n){
 
 int main(){
     S2D_initialize();
-    S2D_create_window("Fractals", WINDOW_W, WINDOW_H);
+    S2D_createWindow("Fractals", WINDOW_W, WINDOW_H);
  
     int max_n = MAX_N;
     float boundary = 4.0f;

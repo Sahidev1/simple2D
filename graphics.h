@@ -279,7 +279,7 @@ typedef struct{
     B: Blue color component
     A: Alpha color component
 
-    Use the colorHexToStruct and colorStructToHex functions to convert between the two
+    Use the S2D_colorHexToStruct and S2D_colorStructToHex functions to convert between the two
 */
 typedef struct{
     Uint8 R;
@@ -316,7 +316,7 @@ int S2D_initialize();
     Create a window with the specified title, width and height
     Returns 0 on success, error code ERROR_CREATE_WINDOW on failure
 */
-int S2D_create_window(const char *title, int w, int h);
+int S2D_createWindow(const char *title, int w, int h);
 
 /* cause a millisecond delay */
 void S2D_delay(int ms);
@@ -341,7 +341,7 @@ int S2D_setRenderScale(float x_scale, float y_scale);
     Get the current draw state
     Returns the current draw state
 */
-Drawstate getDrawState();
+Drawstate S2D_getDrawState();
 
 /*
     Clear the screen with the current draw color
@@ -426,13 +426,13 @@ int S2D_fillRectangleF(const fRectangle *rect);
     Draw and fill a rectangle with the current draw color
     On success, returns 0, otherwise returns an error code
 */
-int S2D_draw_and_fill_rectangle(const Rectangle *rect);
+int S2D_drawFillRectangle(const Rectangle *rect);
 
 /*
     Draw and fill a rectangle with the current draw color using float coordinates
     On success, returns 0, otherwise returns an error code
 */
-int S2D_draw_and_fill_rectangleF(const fRectangle *rect);
+int S2D_drawFillRectangleF(const fRectangle *rect);
 
 
 
@@ -546,11 +546,11 @@ int S2D_eventDequeue(void *data);
 /*
     converts a hex rgba color code to a color struct
 */
-Color colorHexToStruct(Uint32 rgbaHEX);
+Color S2D_colorHexToStruct(Uint32 rgbaHEX);
 
 /*
     converts a color struct to a hex rgba color code
 */
-Uint32 colorStructToHex(Color color);
+Uint32 S2D_colorStructToHex(Color color);
 
 #endif

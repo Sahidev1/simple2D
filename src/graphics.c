@@ -67,7 +67,7 @@ int S2D_setRenderScale(float x_scale, float y_scale){
     return 0;
 }
 
-Drawstate getDrawState(){
+Drawstate S2D_getDrawState(){
     return g_drawstate;
 }
 
@@ -164,7 +164,7 @@ int S2D_eventDequeue(void* data){
     }
 }
 
-int S2D_create_window(const char *title, int w, int h){
+int S2D_createWindow(const char *title, int w, int h){
     int code = 0;
     Uint32 flags = 0;
     g_WINDOW = SDL_CreateWindow(title, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
@@ -203,7 +203,7 @@ int S2D_drawPointsF(const fVector *points, int count){
     return SDL_RenderDrawPointsF(g_RENDERER, (SDL_FPoint *) points, count) != 0 ? ERROR_DRAW_COORD : 0;
 }
 
-int  drawLine(Vector c0, Vector c1){
+int S2D_drawLine(Vector c0, Vector c1){
     return SDL_RenderDrawLine(g_RENDERER, c0.x, c0.y, c1.x, c1.y) !=0 ? ERROR_DRAW_LINE: 0;
 }
 
@@ -250,14 +250,14 @@ int S2D_fillRectangleF(const fRectangle* rect){
     return SDL_RenderFillRectF(g_RENDERER, &rect_sdl) != 0 ? ERROR_RECT_FILL : 0;
 }
 
-int S2D_draw_and_fill_rectangle(const Rectangle* rect){
+int S2D_drawFillRectangle(const Rectangle* rect){
     int code = 0;
     if ((code = S2D_drawRectangle(rect)) != 0) return code;
     if ((code = S2D_fillRectangle(rect)) != 0) return code;
     return 0;
 }
 
-int S2D_draw_and_fill_rectangleF(const fRectangle* rect){
+int S2D_drawFillRectangleF(const fRectangle* rect){
     int code = 0;
     if ((code = S2D_drawRectangleF(rect)) != 0) return code;
     if ((code = S2D_fillRectangleF(rect)) != 0) return code;
@@ -397,7 +397,7 @@ void S2D_addMouseEventHandler(void (*fun_ptr) (MouseEvent*, void*)){
     g_evh->mouse_eventhandler = fun_ptr;
 }
 
-Color colorHexToStruct (Uint32 rgbaHEX){
+Color S2D_colorHexToStruct (Uint32 rgbaHEX){
     Color color;
     color.R = (Uint8) rgbaHEX;
     color.G = (Uint8) (rgbaHEX>>8);
@@ -406,7 +406,7 @@ Color colorHexToStruct (Uint32 rgbaHEX){
     return color;
 }
 
-Uint32 colorStructToHex (Color color){
+Uint32 S2D_colorStructToHex (Color color){
     return color.R | (color.G<<8) | (color.B<<16) | (color.A<<24);
 }
 

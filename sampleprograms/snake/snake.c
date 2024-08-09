@@ -211,10 +211,10 @@ bool snakeCollisionCheck(snake *s){
     int head_ypos = s->positions[HEAD][Y];
     int x_max = WINDOW_W, y_max = WINDOW_H;
     int x, y;
-    for (int i = 0; i < s->tileCount; i++){
+    if (head_xpos < 0 || head_xpos >= x_max || head_ypos < 0 || head_ypos >= y_max) return TRUE;
+    for (int i = 1; i < s->tileCount; i++){
         x = s->positions[i][X], y = s->positions[i][Y];
-        if (x < 0 || x >= x_max || y < 0 || y >= y_max) return TRUE;
-        if (i != 0 && head_xpos == x && head_ypos == y ) return TRUE;
+        if (head_xpos == x && head_ypos == y ) return TRUE;
     }
     return FALSE;
 }
@@ -270,7 +270,7 @@ int main (){
     S2D_addKeyboardEventhandler(keyboard_eventhandler);
     S2D_setDrawColor(BACKGROUND_COLOR);
     S2D_clearScreen();
-    snakeRGBA = (Color){rand()%255,rand()%255,rand()%255 ,255};
+    snakeRGBA = (Color){rand()%255,rand()%255,0 ,255};
 
     snake s;
     apple a;
@@ -289,6 +289,7 @@ int main (){
     Texture* gameover_txt = createGameOverTexture(20, (Color){100, 255,0, 255}, "GAME OVER!");
     Rectangle game_over_dims = {.origin={WINDOW_W/4, WINDOW_H/4}, .w = 4*gameover_txt->width, .h = 4*gameover_txt->height};
     createScoreTexture(20, (Color){0,0,255,255});
+    int tile_appends = 1;
 
     while(g_game_state == GAME_ON){
         S2D_eventDequeue(&s);
@@ -310,10 +311,10 @@ int main (){
         if (snakeAppleCollisionCheck(&a, &s)){
                 g_score += BASE_SCORE_INCR * s.tileCount * (1 + (s.tileCount/10));
                 reposition_apple(&a, &s);
-                snakeAppendTile(&s);
-                snakeAppendTile(&s);
-                snakeAppendTile(&s);
-                snakeAppendTile(&s);
+                for(int i = 0; i < tile_appends; i++){
+                    snakeAppendTile(&s);
+                }
+                tile_appends++;
         }
         
         curr_frame_ticker = S2D_getTicks();

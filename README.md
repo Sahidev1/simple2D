@@ -11,7 +11,7 @@ The library has support for:
 * Keyboard event handling
 * Mouse button, movement, wheel event handling
 
-Sample programs using the library can be found in /sampleprograms directory. 
+Sample programs using the library can be found in /sampleprograms directory. There two sample programs so far: mandelbrot generator, snake. 
 
 
 For compiling programs using the library you need SDL2, SDL2/SDL_image, SDL2/SDL_ttf 

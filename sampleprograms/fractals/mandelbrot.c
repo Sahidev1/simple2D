@@ -86,8 +86,8 @@ void mandelBrotProc(float scaler, float boundary_sqr, int max_n, int x_start_pos
     
 }
 
-void drawPixels(){
-    for (int i = 0; i < WINDOW_W; i++){
+void drawPixels(int x_start_pos, int x_end_pos){
+    for (int i = x_start_pos; i < x_end_pos; i++){
         for(int j = 0; j < WINDOW_H; j++){
             S2D_setDrawColor(g_pixData[i][j]);
             S2D_drawPoint((Vector){i,j});
@@ -133,9 +133,8 @@ int main(int gc, char** gv){
 
     for (int i = 0; i < threadCount; i++){
         pthread_join(threads[i], NULL);
+        drawPixels(d[i].x_start_pos, d[i].window_w);
     }
-    drawPixels();
-
     printf("Thread count: %d\n", threadCount);
     printf("Time taken: %d\n", S2D_getTicks() - tick);
     S2D_presentRender();

@@ -6,21 +6,22 @@
 
 #define WINDOW_W (3*256)
 #define WINDOW_H (3*256)
-#define POS_VECTOR_SIZE 512
 #define SNAKE_START_POS_X 256
 #define SNAKE_START_POS_Y 256
 #define TILE_WIDTH 16
 #define TILE_HEIGHT 16
+#define POS_VECTOR_SIZE ((WINDOW_W/TILE_WIDTH)* (WINDOW_H/TILE_HEIGHT)) 
 #define SNAKE_COLOR (DRAW_COLOR_GREEN)
 #define TEXTURE_PATH_FROM_ROOT_DIR "sampleprograms/snake/pixilapple.png"
 #define FONT_PATH_FROM_ROOT_DIR "sampleprograms/snake/font.ttf"
 #define BACKGROUND_COLOR 0xFFC0C0C0
 #define MOVEMENT_INTERVAL_MS (8*16)
-#define RERENDER_INTERVAL_MS 16
+#define RERENDER_INTERVAL_MS (16)
 #define APPLE_TEXTRURE_WIDTH 16
 #define APPLE_TEXTURE_HEIGHT 16
 #define BASE_SCORE_INCR 4
-#define HEAP_CHUNK_SIZE_INCREMENT_BYTES (1<<15)
+#define HEAD 0
+#define BOTTOM(s) (s->tileCount - 1)
 
 typedef enum {NOT_DRAWN, DRAWN} snakeDrawState;
 typedef enum {RIGHT, LEFT, DOWN, UP} Snakeheading;
@@ -31,6 +32,11 @@ static int g_score = 0;
 static Texture g_scoreTexture;
 static gameState g_game_state;
 static bool g_cond_texture_created = FALSE;
+static bool g_pause = FALSE;
+static bool waiting_keyEvent = FALSE;
+static Color snakeRGBA;
+static bool alterColors = FALSE;
+static bool headingLock = FALSE;
 
 typedef enum {X , Y} coord;
 
@@ -49,7 +55,6 @@ typedef struct {
 void print_snake(snake* s){
     printf("--------------------SNAKE_PRINT-------------------\n");
     printf("snake tile count: %d\n", s->tileCount);
-    printf("snake bottom tile ptr: %p\n", s->positions[s->tileCount - 1]);
     printf("snake heading: %d\n", s->heading);
     printf("snake positions:\n");
     for (int i = 0; i < s->tileCount; i++){
@@ -61,16 +66,23 @@ void print_snake(snake* s){
 void keyboard_eventhandler(KeyboardEvent* ke, void* data){
     if (g_game_state == GAME_OVER) return;
     snake* s = (snake*) data;
+    if (ke->keycode == KEYCODE_SPACE && ke->state == PRESSED){
+        g_pause = !g_pause;
+    }
     int keycode_diff = ke->keycode - KEYCODE_ARROW_RIGHT;
     if (keycode_diff >= 0 && keycode_diff <= 3 && ke->state == PRESSED){
-        if (s->heading + keycode_diff != 5 && s->heading + keycode_diff != 1) s->heading = keycode_diff;
+        if (!headingLock && s->heading + keycode_diff != 5 && s->heading + keycode_diff != 1){
+            s->heading = keycode_diff;
+            headingLock = TRUE;
+        }
+        printf("\teventhandler heading val: %d\n", s->heading);
     }
 }
 
 void initialize_snake(snake* s){
     s->tileCount = 1;
-    s->positions[0][0] = SNAKE_START_POS_X;
-    s->positions[0][1] = SNAKE_START_POS_Y;
+    s->positions[HEAD][0] = SNAKE_START_POS_X;
+    s->positions[HEAD][1] = SNAKE_START_POS_Y;
     s->heading = rand()%4;
 }
 
@@ -79,41 +91,42 @@ void snakeAppendTile(snake* s){
     Snakeheading heading;
  
     if (s->tileCount > 1) {
-        Vector bottomPos = {s->positions[s->tileCount - 1][X], s->positions[s->tileCount - 1][Y]};
+        Vector bottomPos = {s->positions[BOTTOM(s)][X], s->positions[BOTTOM(s)][Y]};
         Vector bottom_prevPos = {s->positions[s->tileCount - 2][X], s->positions[s->tileCount - 2][Y]};
         Vector vDiff = {.x = bottomPos.x - bottom_prevPos.x, .y = bottomPos.y - bottom_prevPos.y};
-        if (vDiff.x > 0) heading = RIGHT;
-        else if (vDiff.x < 0) heading = LEFT;
-        else if (vDiff.y > 0) heading = DOWN;
-        else heading = UP;
+        if (vDiff.x > 0) heading = LEFT;
+        else if (vDiff.x < 0) heading = RIGHT;
+        else if (vDiff.y > 0) heading = UP;
+        else if (vDiff.y < 0) heading = DOWN;
     } else {
         heading = s->heading;
     }
 
+
     switch (heading){
         case DOWN:
-            origin.x = s->positions[0][X];
-            origin.y = s->positions[0][Y] + TILE_HEIGHT;
+            origin.x = s->positions[BOTTOM(s)][X];
+            origin.y = s->positions[BOTTOM(s)][Y] - TILE_HEIGHT;
             break;
         case UP:
-            origin.x = s->positions[0][X];
-            origin.y = s->positions[0][Y] - TILE_HEIGHT;
+            origin.x = s->positions[BOTTOM(s)][X];
+            origin.y = s->positions[BOTTOM(s)][Y] + TILE_HEIGHT;
             break;
         case LEFT:
-            origin.x = s->positions[0][X] - TILE_WIDTH;
-            origin.y = s->positions[0][Y];
+            origin.x = s->positions[BOTTOM(s)][X] + TILE_WIDTH;
+            origin.y = s->positions[BOTTOM(s)][Y];
             break;
         case RIGHT:
-            origin.x = s->positions[0][X] + TILE_WIDTH;
-            origin.y = s->positions[0][Y];
+            origin.x = s->positions[BOTTOM(s)][X] - TILE_WIDTH;
+            origin.y = s->positions[BOTTOM(s)][Y];
             break;
         default:
             break;
     }
 
-    s->tileCount++;
-    s->positions [s->tileCount - 1][0] = origin.x;
-    s->positions [s->tileCount - 1][1] = origin.y;
+    ++s->tileCount;
+    s->positions [BOTTOM(s)][X] = origin.x;
+    s->positions [BOTTOM(s)][Y] = origin.y;
 }
 
 void reposition_apple(apple* a, snake* s){
@@ -134,11 +147,19 @@ void drawSnake(snake* s){
         int i = 0;
         Rectangle rect;
         rect.w = TILE_WIDTH, rect.h = TILE_HEIGHT;
-        S2D_setDrawColor(SNAKE_COLOR);
+        Color copy = snakeRGBA;
         while (i < s->tileCount){
-            rect.origin = (Vector) {s->positions[i][X], s->positions[i][Y]};
-            S2D_drawFillRectangle(&rect);
+            rect.origin.x = s->positions[i][X];
+            rect.origin.y = s->positions[i][Y];
+            S2D_setDrawColor(S2D_colorStructToHex(snakeRGBA));
+            S2D_fillRectangle(&rect);
+            S2D_setDrawColor(DRAW_COLOR_BLACK);
+            S2D_drawRectangle(&rect);
             i++;
+        }
+        if(alterColors){
+            snakeRGBA.R = (snakeRGBA.R + 1)%255;
+            alterColors = FALSE;
         }
 }
 
@@ -164,10 +185,10 @@ void movement(Vector* pos, Snakeheading heading, int verticalMovementIncrement, 
 void snakeMove(snake* s){
     Vector pos;
     Vector prevHeadPos;
-    pos = (Vector){.x = s->positions[0][X], .y = s->positions[0][Y]};
+    pos = (Vector){.x = s->positions[HEAD][X], .y = s->positions[HEAD][Y]};
     prevHeadPos = pos;
     movement(&pos, s->heading, TILE_HEIGHT, TILE_WIDTH);
-    s->positions[0][X] = pos.x, s->positions[0][Y] = pos.y;
+    s->positions[HEAD][X] = pos.x, s->positions[HEAD][Y] = pos.y;
 
     int i = 1;
     pos = prevHeadPos;
@@ -186,8 +207,8 @@ void drawApple(apple* a){
 }
 
 bool snakeCollisionCheck(snake *s){
-    int head_xpos = s->positions[0][X];
-    int head_ypos = s->positions[0][Y];
+    int head_xpos = s->positions[HEAD][X];
+    int head_ypos = s->positions[HEAD][Y];
     int x_max = WINDOW_W, y_max = WINDOW_H;
     int x, y;
     for (int i = 0; i < s->tileCount; i++){
@@ -199,7 +220,7 @@ bool snakeCollisionCheck(snake *s){
 }
 
 bool snakeAppleCollisionCheck(apple* a, snake* s){
-    Vector snakeVect = (Vector){s->positions[0][X], s->positions[0][Y]};
+    Vector snakeVect = (Vector){s->positions[HEAD][X], s->positions[HEAD][Y]};
     Vector appleVect = a->data.origin;
     int snake_w = TILE_WIDTH;
     int apple_w = a->data.w;
@@ -249,6 +270,7 @@ int main (){
     S2D_addKeyboardEventhandler(keyboard_eventhandler);
     S2D_setDrawColor(BACKGROUND_COLOR);
     S2D_clearScreen();
+    snakeRGBA = (Color){rand()%255,rand()%255,rand()%255 ,255};
 
     snake s;
     apple a;
@@ -259,6 +281,8 @@ int main (){
     
     Uint32 ticks_init = S2D_getTicks();
     Uint32 ticks_curr;
+    Uint32 prev_frame_ticker = ticks_curr;
+    Uint32 curr_frame_ticker = ticks_curr;
     bool collisionState = FALSE;
     int prevScore = g_score;
     g_game_state = GAME_ON; 
@@ -268,6 +292,10 @@ int main (){
 
     while(g_game_state == GAME_ON){
         S2D_eventDequeue(&s);
+        if (g_pause) {
+            S2D_delay(100);
+            continue;
+        }
         ticks_curr = S2D_getTicks();
         if (ticks_curr - ticks_init >= MOVEMENT_INTERVAL_MS && !collisionState){
             snakeMove(&s);
@@ -275,20 +303,30 @@ int main (){
             if (collisionState) g_game_state = GAME_OVER;
             print_snake(&s);
             ticks_init = ticks_curr;
+            alterColors = TRUE;
+            headingLock = FALSE;
         }
 
         if (snakeAppleCollisionCheck(&a, &s)){
                 g_score += BASE_SCORE_INCR * s.tileCount * (1 + (s.tileCount/10));
                 reposition_apple(&a, &s);
                 snakeAppendTile(&s);
+                snakeAppendTile(&s);
+                snakeAppendTile(&s);
+                snakeAppendTile(&s);
         }
         
-        S2D_delay(RERENDER_INTERVAL_MS);
+        curr_frame_ticker = S2D_getTicks();
+        if (curr_frame_ticker - prev_frame_ticker >= RERENDER_INTERVAL_MS){
+            if(curr_frame_ticker - prev_frame_ticker > RERENDER_INTERVAL_MS) printf("\t----RERENDER MISS %d\n", curr_frame_ticker - prev_frame_ticker);
+            prev_frame_ticker = curr_frame_ticker;
+        }
+        S2D_delay(1);
         S2D_setDrawColor(BACKGROUND_COLOR);
         S2D_clearScreen();
         drawSnake(&s);
         drawApple(&a);
-
+        
         if (g_score != prevScore){
             createScoreTexture(20, (Color){0,0,255,255});
             prevScore = g_score;

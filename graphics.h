@@ -33,6 +33,7 @@
 
 #include <SDL2/SDL_stdinc.h>
 
+typedef int S2D_timerID;
 
 //simple boolean type
 typedef enum {FALSE, TRUE} bool;
@@ -563,6 +564,12 @@ void S2D_addKeyboardEventhandler(void (*fun_ptr)(KeyboardEvent *, void *));
     fun_ptr: the function pointer to the mouse event handler
 */
 void S2D_addMouseEventHandler(void (*fun_ptr)(MouseEvent *, void *));
+
+Uint32 S2D_getTicks();
+
+S2D_timerID S2D_setInterval(Uint32 interval_ms, Uint32 (*callbackFn)(Uint32, void *), void *callBackParam);
+
+bool S2D_removeTimer(S2D_timerID id);
 
 /*
     Dequeues an event from the event queue that is then passed along to the corresponding event handler, can be looped to dequeue all events

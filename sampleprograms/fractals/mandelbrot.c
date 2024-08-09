@@ -1,12 +1,30 @@
 #include "../../graphics.h"
 #include <stdio.h>
 #include <math.h>
+#include <pthread.h>
+
+/*
+    Multithreaded Mandelbrot set generator
+    default thread count is 4
+    usage: ./mandelbrot <thread_count>
+*/
 
 #define WINDOW_W 1600
 #define WINDOW_H 1024
 #define MAX_N 100
 #define BOUNDARY_SQR 4
+#define SCALER 512.0f
 
+Uint32 g_pixData[WINDOW_W][WINDOW_H];
+
+typedef struct {
+    float scaler;
+    float boundary_sqr;
+    int max_n;
+    int window_w;
+    int window_h;
+    int x_start_pos;
+} ThreadData;
 
 int x_transform(int x){
     return x - WINDOW_W / 2;
@@ -37,14 +55,8 @@ void mandelBrotFn(float *v_r, float *v_z, float c_r, float c_z){
     add(c_r, c_z, v_r, v_z);
 }
 
-void drawColor(Vector* v, Uint32 colorHex){
-    S2D_setDrawColor(colorHex);
-    S2D_drawPoint(*v);
-    S2D_setDrawColor(DRAW_COLOR_TRANSPARENT);
-}
 
-
-void mandelBrotProc(float scaler, float boundary_sqr, int max_n){
+void mandelBrotProc(float scaler, float boundary_sqr, int max_n, int x_start_pos, int window_w, int window_h){
     int count = 0;
     float v_r, v_z;
     float c_r, c_z;
@@ -52,9 +64,9 @@ void mandelBrotProc(float scaler, float boundary_sqr, int max_n){
     float absSqr = 0;
     Vector v;
     Color c = {.R = 0, .G = 0, .B = 0, .A = 255};
-    for (int i = 0; i < WINDOW_W; i++)
+    for (int i =x_start_pos; i < window_w; i++)
     {
-        for (int j = 0; j < WINDOW_H; j++)
+        for (int j = 0; j < window_h; j++)
         {
             count = 0;
             v_r = 0.0f, v_z = 0.0f;
@@ -67,24 +79,65 @@ void mandelBrotProc(float scaler, float boundary_sqr, int max_n){
             v.x = i, v.y = j;
             c.R = count * colorMult;
             c.G = (Uint8)2*absSqr;
-            drawColor(&v, S2D_colorStructToHex(c));
+            g_pixData[i][j] = S2D_colorStructToHex(c);
         }
         
     }
     
 }
 
+void drawPixels(){
+    for (int i = 0; i < WINDOW_W; i++){
+        for(int j = 0; j < WINDOW_H; j++){
+            S2D_setDrawColor(g_pixData[i][j]);
+            S2D_drawPoint((Vector){i,j});
+        }
+    }
+}
 
-int main(){
+
+void* thread_fun(void* params){
+    ThreadData* d = (ThreadData*) params;
+    mandelBrotProc(d->scaler, d->boundary_sqr, d->max_n, d->x_start_pos, d->window_w, d->window_h);
+}
+
+
+
+
+int main(int gc, char** gv){
+    int threadCount = 4;
     S2D_initialize();
     S2D_createWindow("Fractals", WINDOW_W, WINDOW_H);
- 
-    int max_n = MAX_N;
-    float boundary = 4.0f;
-    S2D_setDrawColor(DRAW_COLOR_TRANSPARENT);
-    S2D_clearScreen();
-    mandelBrotProc(512, boundary, max_n);
-    S2D_delay(1);
+    if (gc > 1) {
+        threadCount = atoi(gv[1]);
+    }
+
+    pthread_t threads[threadCount];
+    ThreadData d[threadCount];
+
+    int tick = S2D_getTicks();
+
+    int x_segment_size = WINDOW_W / threadCount;
+    int x_start_pos = 0;
+    for (int i = 0; i < threadCount; i++){
+        d[i].boundary_sqr = BOUNDARY_SQR;
+        d[i].max_n = MAX_N;
+        d[i].scaler = SCALER;
+        d[i].x_start_pos = x_start_pos;
+        d[i].window_w = x_start_pos + x_segment_size;
+        d[i].window_h = WINDOW_H;
+        x_start_pos += x_segment_size; 
+
+        pthread_create(&threads[i], NULL, thread_fun, &d[i]);
+    }
+
+    for (int i = 0; i < threadCount; i++){
+        pthread_join(threads[i], NULL);
+    }
+    drawPixels();
+
+    printf("Thread count: %d\n", threadCount);
+    printf("Time taken: %d\n", S2D_getTicks() - tick);
     S2D_presentRender();
     while (TRUE){
         S2D_eventDequeue(NULL);

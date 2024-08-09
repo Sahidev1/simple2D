@@ -431,6 +431,18 @@ void S2D_addMouseEventHandler(void (*fun_ptr) (MouseEvent*, void*)){
     g_evh->mouse_eventhandler = fun_ptr;
 }
 
+Uint32 S2D_getTicks(){
+    return SDL_GetTicks();
+}
+
+S2D_timerID S2D_setInterval(Uint32 interval_ms, Uint32 (*callbackFn) (Uint32, void*), void* callBackParam){
+    return SDL_AddTimer(interval_ms, callbackFn, callBackParam);
+}
+
+bool S2D_removeTimer(S2D_timerID id){
+    return SDL_RemoveTimer(id);
+}
+
 Color S2D_colorHexToStruct (Uint32 rgbaHEX){
     Color color;
     color.R = (Uint8) rgbaHEX;
@@ -439,6 +451,8 @@ Color S2D_colorHexToStruct (Uint32 rgbaHEX){
     color.A = (Uint8) (rgbaHEX>>24);
     return color;
 }
+
+
 
 Uint32 S2D_colorStructToHex (Color color){
     return color.R | (color.G<<8) | (color.B<<16) | (color.A<<24);

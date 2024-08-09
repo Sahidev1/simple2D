@@ -565,10 +565,24 @@ void S2D_addKeyboardEventhandler(void (*fun_ptr)(KeyboardEvent *, void *));
 */
 void S2D_addMouseEventHandler(void (*fun_ptr)(MouseEvent *, void *));
 
+/*
+    Get ticks in ms since S2D_initialize was called
+*/
 Uint32 S2D_getTicks();
 
+/*
+    Set intervalled callbacks. The callback function is called every interval_ms milliseconds
+    until it returns 0 or the timer is removed. 
+    interval_ms: the interval in milliseconds
+    callbackFn: the callback function to call
+    callBackParam: the parameter to pass to the callback function
+    Returns the timer id on success, -1 on failure
+*/
 S2D_timerID S2D_setInterval(Uint32 interval_ms, Uint32 (*callbackFn)(Uint32, void *), void *callBackParam);
 
+/*
+    Disable intervalled callbacks with the specified timer id
+*/
 bool S2D_removeTimer(S2D_timerID id);
 
 /*

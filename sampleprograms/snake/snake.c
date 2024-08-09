@@ -59,6 +59,7 @@ void print_snake(snake* s){
 }
 
 void keyboard_eventhandler(KeyboardEvent* ke, void* data){
+    if (g_game_state == GAME_OVER) return;
     snake* s = (snake*) data;
     int keycode_diff = ke->keycode - KEYCODE_ARROW_RIGHT;
     if (keycode_diff >= 0 && keycode_diff <= 3 && ke->state == PRESSED){

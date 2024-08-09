@@ -108,14 +108,6 @@ static int EventQueueFilter (void* userdata, SDL_Event *event, void* data){
         }   
     }
 
-/*
-    if (event->type == MOUSE_MOVE || event->type == MOUSE_BUTTON_PRESSED || event->type == MOUSE_BUTTON_RELEASED || event->type == MOUSE_WHEEL_MOVED){
-        if (eh->mouse_eventhandler_enabled && eh->mouse_eventhandler != NULL){
-            eh->mouse_eventhandler(event);
-
-        }
-    }
-*/
     if(eh->mouse_eventhandler_enabled && eh->mouse_eventhandler != NULL){
         if(event->type == MOUSE_BUTTON_PRESSED || event->type == MOUSE_BUTTON_RELEASED){
             MouseEvent me = {.type = BUTTON, .btn = {.button = event->button.button, .clicks = event->button.clicks,
@@ -307,8 +299,7 @@ int S2D_createTexture(const char *file, Texture* text){
     return surfaceToTexture(surf, text);
 }
 
-void S2D_destroyTexture(Texture *txt)
-{
+void S2D_destroyTexture(Texture *txt){
     SDL_DestroyTexture(((internal_texture_data*)txt->internal_)->texture);
     SDL_FreeSurface(((internal_texture_data*)txt->internal_)->surface);
     free((internal_texture_data*)txt->internal_);

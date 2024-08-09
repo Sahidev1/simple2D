@@ -9,7 +9,7 @@
     usage: ./mandelbrot <thread_count>
 */
 
-#define WINDOW_W 1600
+#define WINDOW_W 3*512
 #define WINDOW_H 1024
 #define MAX_N 100
 #define BOUNDARY_SQR 4

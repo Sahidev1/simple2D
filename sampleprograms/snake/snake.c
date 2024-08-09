@@ -32,26 +32,10 @@ static Texture g_scoreTexture;
 static gameState g_game_state;
 static bool g_cond_texture_created = FALSE;
 
+typedef enum {X , Y} coord;
+
 
 typedef struct {
-    void* heap_chunk;
-    int free_chunk_index;
-    int chunk_size;
-} heap_chunk;
-
-static heap_chunk g_tiles_heapchunk;
-
-typedef struct Tile{
-    Rectangle data;
-    struct Tile* next;
-    struct Tile* prev;
-    int posIndex;
-} tile;
-
-typedef struct {
-    snakeDrawState draw_state;
-    tile* tiles;
-    tile* bottomTile;
     Snakeheading heading;
     int tileCount;
     int positions[POS_VECTOR_SIZE][2];
@@ -62,42 +46,14 @@ typedef struct {
     Rectangle data;
 } apple;
 
-void init_heap_chunk(){
-    g_tiles_heapchunk.free_chunk_index = 0;
-    g_tiles_heapchunk.chunk_size = HEAP_CHUNK_SIZE_INCREMENT_BYTES;
-    g_tiles_heapchunk.heap_chunk = malloc(HEAP_CHUNK_SIZE_INCREMENT_BYTES);
-}
-
-void* alloc_chunk(size_t alloc_size_bytes){
-    if (g_tiles_heapchunk.free_chunk_index + alloc_size_bytes > g_tiles_heapchunk.chunk_size){
-        g_tiles_heapchunk.heap_chunk = realloc(g_tiles_heapchunk.heap_chunk, g_tiles_heapchunk.chunk_size + HEAP_CHUNK_SIZE_INCREMENT_BYTES);
-    }
-    void* chunk = g_tiles_heapchunk.heap_chunk;
-    chunk = chunk + g_tiles_heapchunk.free_chunk_index;
-    g_tiles_heapchunk.free_chunk_index += alloc_size_bytes;
-    return chunk;
-}
-
-void destroy_chunk(){
-    free(g_tiles_heapchunk.heap_chunk);
-}
-
 void print_snake(snake* s){
     printf("--------------------SNAKE_PRINT-------------------\n");
     printf("snake tile count: %d\n", s->tileCount);
-    printf("snake bottom tile ptr: %p\n", s->bottomTile);
+    printf("snake bottom tile ptr: %p\n", s->positions[s->tileCount - 1]);
     printf("snake heading: %d\n", s->heading);
-    printf("snake draw state: %d\n", s->draw_state);
     printf("snake positions:\n");
     for (int i = 0; i < s->tileCount; i++){
-        printf("x: %d, y: %d\n", s->positions[i][0], s->positions[i][1]);
-    }
-    tile* t_ptr = s->tiles;
-    printf("snake tiles:\n");
-    while (t_ptr != NULL){
-        printf("x: %d, y: %d\n", t_ptr->data.origin.x, t_ptr->data.origin.y);
-        printf("\tcurr ptr: %p ,prev ptr: %p, next ptr: %p\n", t_ptr ,t_ptr->prev, t_ptr->next);
-        t_ptr = t_ptr->next;
+        printf("snake %d position: x: %d, y: %d\n", i, s->positions[i][0], s->positions[i][1]);
     }
     printf("--------------------SNAKE_PRINT_END-------------------\n");
 }
@@ -110,90 +66,53 @@ void keyboard_eventhandler(KeyboardEvent* ke, void* data){
     }
 }
 
-void set_tile(tile *t, Rectangle *rect, tile* next, tile* prev){
-    t->data.origin = rect->origin;
-    t->data.h = rect->h, t->data.w = rect->w;
-    t->next = next;
-    t->prev = prev;
-    t->posIndex = g_posIndex++;
-}
-
 void initialize_snake(snake* s){
-    tile* t = (tile*) alloc_chunk(sizeof(tile));
-    Vector origin = {.x = SNAKE_START_POS_X, .y = SNAKE_START_POS_Y};
-    Rectangle rect = {.origin = origin, .h = TILE_HEIGHT, .w=TILE_HEIGHT};
-
-    set_tile(t, &rect, NULL, NULL);
-    s->tiles = t;
-    s->bottomTile = NULL;
     s->tileCount = 1;
     s->positions[0][0] = SNAKE_START_POS_X;
     s->positions[0][1] = SNAKE_START_POS_Y;
-    s->draw_state = NOT_DRAWN;
     s->heading = rand()%4;
 }
 
 void snakeAppendTile(snake* s){
-    tile* newHead = (tile*) alloc_chunk(sizeof(tile));
     Vector origin;
-    if (s->bottomTile == NULL){
-        switch (s->heading)
-        {
+    Snakeheading heading;
+ 
+    if (s->tileCount > 1) {
+        Vector bottomPos = {s->positions[s->tileCount - 1][X], s->positions[s->tileCount - 1][Y]};
+        Vector bottom_prevPos = {s->positions[s->tileCount - 2][X], s->positions[s->tileCount - 2][Y]};
+        Vector vDiff = {.x = bottomPos.x - bottom_prevPos.x, .y = bottomPos.y - bottom_prevPos.y};
+        if (vDiff.x > 0) heading = RIGHT;
+        else if (vDiff.x < 0) heading = LEFT;
+        else if (vDiff.y > 0) heading = DOWN;
+        else heading = UP;
+    } else {
+        heading = s->heading;
+    }
+
+    switch (heading){
         case DOWN:
-            origin.x = s->tiles->data.origin.x;
-            origin.y = s->tiles->data.origin.y + s->tiles->data.h;
+            origin.x = s->positions[0][X];
+            origin.y = s->positions[0][Y] + TILE_HEIGHT;
             break;
         case UP:
-            origin.x = s->tiles->data.origin.x;
-            origin.y = s->tiles->data.origin.y - s->tiles->data.h;
+            origin.x = s->positions[0][X];
+            origin.y = s->positions[0][Y] - TILE_HEIGHT;
             break;
         case LEFT:
-            origin.x = s->tiles->data.origin.x - s->tiles->data.w;
-            origin.y = s->tiles->data.origin.y;
+            origin.x = s->positions[0][X] - TILE_WIDTH;
+            origin.y = s->positions[0][Y];
             break;
         case RIGHT:
-            origin.x = s->tiles->data.origin.x + s->tiles->data.w;
-            origin.y = s->tiles->data.origin.y;
+            origin.x = s->positions[0][X] + TILE_WIDTH;
+            origin.y = s->positions[0][Y];
             break;
         default:
             break;
-        }
     }
-    else {
-        Vector bottomPos = s->bottomTile->data.origin;
-        Vector bottom_prevPos = s->bottomTile->prev->data.origin;
-        Vector vDiff = {.x = bottomPos.x - bottom_prevPos.x, .y = bottomPos.y - bottom_prevPos.y};
-        if (vDiff.x > 0){
-            origin.x = bottomPos.x + s->bottomTile->data.w;
-            origin.y = bottomPos.y;
-        }
-        else if (vDiff.x < 0){
-            origin.x = bottomPos.x - s->bottomTile->data.w;
-            origin.y = bottomPos.y;
-        }
-        else if (vDiff.y > 0){
-            origin.x = bottomPos.x;
-            origin.y = bottomPos.y + s->bottomTile->data.h;
-        }
-        else if (vDiff.y < 0){
-            origin.x = bottomPos.x;
-            origin.y = bottomPos.y - s->bottomTile->data.h;
-        }
-    }
-    Rectangle rect = {.origin = origin, .h = TILE_HEIGHT, .w = TILE_WIDTH};
-    set_tile(newHead, &rect, NULL, NULL);
-    s->positions [newHead->posIndex][0] = origin.x;
-    s->positions [newHead->posIndex][1] = origin.y;
-    if (s->bottomTile == NULL){
-        s->tiles->next = newHead;
-        s->bottomTile = newHead;
-        s->bottomTile->prev = s->tiles;
-    } else {
-        newHead->prev = s->bottomTile;
-        s->bottomTile->next = newHead;
-        s->bottomTile = s->bottomTile->next;
-    }
+
     s->tileCount++;
+    s->positions [s->tileCount - 1][0] = origin.x;
+    s->positions [s->tileCount - 1][1] = origin.y;
 }
 
 void reposition_apple(apple* a, snake* s){
@@ -211,65 +130,51 @@ int init_apple(apple* a){
 }
 
 void drawSnake(snake* s){
-    if (TRUE){
-        tile* t_ptr = s->tiles;
+        int i = 0;
+        Rectangle rect;
+        rect.w = TILE_WIDTH, rect.h = TILE_HEIGHT;
         S2D_setDrawColor(SNAKE_COLOR);
-        while (t_ptr != NULL){
-            S2D_drawFillRectangle(&t_ptr->data);
-            t_ptr = t_ptr->next;
+        while (i < s->tileCount){
+            rect.origin = (Vector) {s->positions[i][X], s->positions[i][Y]};
+            S2D_drawFillRectangle(&rect);
+            i++;
         }
-        s->draw_state = DRAWN;
-    }
 }
 
 void movement(Vector* pos, Snakeheading heading, int verticalMovementIncrement, int horizontalMovementIncrement){
     switch (heading){
-    case DOWN:
-        pos->y += verticalMovementIncrement;
-        break;
-    case UP: 
-        pos->y -= verticalMovementIncrement;
-        break;
-    case LEFT:
-        pos->x -= horizontalMovementIncrement;
-        break;
-    case RIGHT:
-        pos->x += horizontalMovementIncrement;
-        break;
-    default:
-        break;
+        case DOWN:
+            pos->y += verticalMovementIncrement;
+            break;
+        case UP: 
+            pos->y -= verticalMovementIncrement;
+            break;
+        case LEFT:
+            pos->x -= horizontalMovementIncrement;
+            break;
+        case RIGHT:
+            pos->x += horizontalMovementIncrement;
+            break;
+        default:
+            break;
     }
 }
 
 void snakeMove(snake* s){
-    if (s->bottomTile == NULL){
-        movement(&s->tiles->data.origin, s->heading, s->tiles->data.h, s->tiles->data.w);
-        s->positions[0][0] = s->tiles->data.origin.x;
-        s->positions[0][1] = s->tiles->data.origin.y;
+    Vector pos;
+    Vector prevHeadPos;
+    pos = (Vector){.x = s->positions[0][X], .y = s->positions[0][Y]};
+    prevHeadPos = pos;
+    movement(&pos, s->heading, TILE_HEIGHT, TILE_WIDTH);
+    s->positions[0][X] = pos.x, s->positions[0][Y] = pos.y;
 
-    }
-    else {
-        Vector currHeadPos = s->tiles->data.origin;
-        movement(&s->tiles->data.origin, s->heading, s->tiles->data.h, s->tiles->data.w);
-        s->positions[0][0] = s->tiles->data.origin.x;
-        s->positions[0][1] = s->tiles->data.origin.y;
-        s->bottomTile->data.origin = currHeadPos;
-        s->positions[s->bottomTile->posIndex][0] = currHeadPos.x;
-        s->positions[s->bottomTile->posIndex][1] = currHeadPos.y;
-        if (s->tileCount > 2){
-            tile* head = s->tiles;
-            tile* nextToHead = s->tiles->next;
-            tile* bottom = s->bottomTile;
-            tile* prevBottom = s->bottomTile->prev;
-
-            head->next = bottom;
-            bottom->prev = head;
-            bottom->next = nextToHead;
-            nextToHead->prev = bottom;
-            prevBottom->next = NULL;
-            s->bottomTile = prevBottom;
-        }
-
+    int i = 1;
+    pos = prevHeadPos;
+    while (i < s->tileCount){
+        prevHeadPos.x = s->positions[i][X], prevHeadPos.y = s->positions[i][Y];
+        s->positions[i][X] = pos.x, s->positions[i][Y] = pos.y;
+        pos = prevHeadPos;
+        i++;
     }
 }
 
@@ -280,26 +185,24 @@ void drawApple(apple* a){
 }
 
 bool snakeCollisionCheck(snake *s){
-    int head_xpos = s->positions[s->tiles->posIndex][0];
-    int head_ypos = s->positions[s->tiles->posIndex][1];
+    int head_xpos = s->positions[0][X];
+    int head_ypos = s->positions[0][Y];
     int x_max = WINDOW_W, y_max = WINDOW_H;
-    int* positions =  (int*)s->positions;
     int x, y;
     for (int i = 0; i < s->tileCount; i++){
-        x = *(positions + 2*i);
-        y = *(positions + 2*i + 1);
+        x = s->positions[i][X], y = s->positions[i][Y];
         if (x < 0 || x >= x_max || y < 0 || y >= y_max) return TRUE;
-        if (i != s->tiles->posIndex && head_xpos == x && head_ypos == y ) return TRUE;
+        if (i != 0 && head_xpos == x && head_ypos == y ) return TRUE;
     }
     return FALSE;
 }
 
 bool snakeAppleCollisionCheck(apple* a, snake* s){
-    Vector snakeVect = s->tiles->data.origin;
+    Vector snakeVect = (Vector){s->positions[0][X], s->positions[0][Y]};
     Vector appleVect = a->data.origin;
-    int snake_w = s->tiles->data.w;
+    int snake_w = TILE_WIDTH;
     int apple_w = a->data.w;
-    int snake_h = s->tiles->data.h;
+    int snake_h = TILE_HEIGHT;
     int apple_h = a->data.h;
     bool c0, c1;
     if (appleVect.x > snakeVect.x){
@@ -340,7 +243,6 @@ Texture* createGameOverTexture(int font_size, Color color, char* game_over_msg){
 
 int main (){
     srand(time(NULL));
-    init_heap_chunk();
     S2D_initialize();
     S2D_createWindow("Snake", WINDOW_W, WINDOW_H);
     S2D_addKeyboardEventhandler(keyboard_eventhandler);
@@ -349,7 +251,7 @@ int main (){
 
     snake s;
     apple a;
-    printf("retcode: %d\n",init_apple(&a));
+    init_apple(&a);
     initialize_snake(&s);
     S2D_presentRender();
     print_snake(&s);
@@ -370,10 +272,7 @@ int main (){
             snakeMove(&s);
             collisionState = snakeCollisionCheck(&s);
             if (collisionState) g_game_state = GAME_OVER;
-
             print_snake(&s);
-            printf("apple pos x: %d, y: %d\n", a.data.origin.x, a.data.origin.y);
-            printf("SCORE = %d, prevscore = %d\n", g_score, prevScore);
             ticks_init = ticks_curr;
         }
 
@@ -408,7 +307,6 @@ int main (){
     S2D_destroyTexture(gameover_txt);
     S2D_destroyTexture(&g_scoreTexture);
     S2D_destroyTexture(&a.txt);
-    destroy_chunk();
 
     while(S2D_getTicks() < ticks_curr + LOOP_TICKS){
         S2D_eventDequeue(NULL);
